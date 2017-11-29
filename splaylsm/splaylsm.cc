@@ -2,7 +2,6 @@
 // Luca Schroeder, Thomas Lively, Carlos Mendizabal
 
 #include "../splaylsm/splaylsm.h"
-#include "rocksdb/options.h"
 
 Options getOptions(
     int memtable_size,
@@ -72,8 +71,12 @@ Status LSMTree::Insert(const Slice& key, const Slice& value) {
     return s;
 }
 
-Status LSMTree::Get(const Slice& key, std::string *value) {
-    s = db->Get(ReadOptions(), key, value);
+Status LSMTree::Get(const Slice& key, std::string *stringVal) {
+    s = db->Get(ReadOptions(), key, stringVal);
+    assert(s.ok());
+
+    Slice value(*stringVal);    
+    s = db->Put(WriteOptions(), key, value);
     assert(s.ok());
 
     return s;
