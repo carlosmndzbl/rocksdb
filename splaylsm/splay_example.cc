@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <string>
 
-#include "../splaylsm/splaylsm.h"
+#include "../splaylsm/splaylsm.cc"
 
 std::string kDBPath = "/tmp/splay_simple_example";
 

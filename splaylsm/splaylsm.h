@@ -4,6 +4,7 @@
 #include <string>
 
 #include "rocksdb/db.h"
+#include "rocksdb/table.h"
 #include "rocksdb/options.h"
 #include "rocksdb/types.h"
 
