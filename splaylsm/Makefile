@@ -14,13 +14,16 @@ endif
 
 .PHONY: clean librocksdb
 
-all: splay_example
+all: splay_example test
 
 splay_example: librocksdb splaylsm.h splay_example.cc
 	$(CXX) $(CXXFLAGS) $@.cc -o $@ ../librocksdb.a -I../include -O2 -std=c++11 $(PLATFORM_LDFLAGS) $(PLATFORM_CXXFLAGS) $(EXEC_LDFLAGS)
 
+test: librocksdb splaylsm.h test.cc
+	$(CXX) $(CXXFLAGS) $@.cc -o $@ ../librocksdb.a -I../include -O2 -std=c++11 $(PLATFORM_LDFLAGS) $(PLATFORM_CXXFLAGS) $(EXEC_LDFLAGS)
+
 clean:
-	rm -rf ./splay_example
+	rm -f splay_example test
 
 librocksdb:
 	cd .. && $(MAKE) static_lib

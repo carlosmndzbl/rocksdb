@@ -61,7 +61,10 @@ Options getOptions(
 LSMTree::LSMTree(std::string &name) {
     options = getOptions(memtable_size, cache_size, multiplier);
     Status s = DB::Open(options, name, &db);
-    assert(s.ok());
+    if (!s.ok()) {
+        fprintf(stderr, "Can't open database: %s\n", s.ToString().c_str());
+        std::abort();
+    }
 }
 
 Status LSMTree::Insert(const Slice& key, const Slice& value) {
