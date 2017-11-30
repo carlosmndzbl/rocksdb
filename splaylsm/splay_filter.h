@@ -8,6 +8,7 @@
 #include <rocksdb/merge_operator.h>
 #include <rocksdb/options.h>
 
+// this is a hack, but it'll do for now since we're just testing perf...
 const std::string splayed_val = "this key was splayed";
 
 class SplayMerge : public rocksdb::MergeOperator {
