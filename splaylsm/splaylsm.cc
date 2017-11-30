@@ -2,38 +2,43 @@
 // Luca Schroeder, Thomas Lively, Carlos Mendizabal
 
 #include "../splaylsm/splaylsm.h"
+#include "../splaylsm/splay_filter.h"
 
-Options getOptions(
+void setOptions(
     int memtable_size,
     int cache_size,
-    int multiplier
+    int multiplier,
+    Options *options
 ) {
-    Options options;
-    options.create_if_missing = true;
+    options->create_if_missing = true;
+
+    // filter & merge options
+    options->merge_operator.reset(new SplayMerge);
+    options->compaction_filter = new SplayFilter;
 
     // compaction style and level options
-    options.compaction_style = kCompactionStyleLevel;
+    options->compaction_style = kCompactionStyleLevel;
 
     // memtable options
-    options.write_buffer_size = memtable_size;
-    options.max_write_buffer_number = 1;                  // # of memtables
-    options.min_write_buffer_number_to_merge = 1;
+    options->write_buffer_size = memtable_size;
+    options->max_write_buffer_number = 1;                  // # of memtables
+    options->min_write_buffer_number_to_merge = 1;
 
     // level 0 options: set the size of Level 0 to @multiplier times memtable size
-    options.level0_file_num_compaction_trigger = multiplier;	      
-    options.level0_slowdown_writes_trigger = multiplier;
-    options.level0_stop_writes_trigger = multiplier;
-    options.target_file_size_base = memtable_size;
+    options->level0_file_num_compaction_trigger = multiplier;	      
+    options->level0_slowdown_writes_trigger = multiplier;
+    options->level0_stop_writes_trigger = multiplier;
+    options->target_file_size_base = memtable_size;
 
     // other level options: L1 is same size as L0 per RocksDB recommendation
-    options.max_bytes_for_level_base = multiplier * memtable_size;
-    options.max_bytes_for_level_multiplier = multiplier;  
+    options->max_bytes_for_level_base = multiplier * memtable_size;
+    options->max_bytes_for_level_multiplier = multiplier;  
 
-    // options.num_levels is 7 by default
+    // options->num_levels is 7 by default
 
     // compaction trigger options
-    options.max_background_compactions = 1;
-    options.max_background_flushes = 1;
+    options->max_background_compactions = 1;
+    options->max_background_flushes = 1;
 
     // bloom filter options as defaults
 
@@ -49,22 +54,25 @@ Options getOptions(
         NewBlockBasedTableFactory(table_options));
 
     // os cache options (do not use OS cache for IO)
-    options.use_direct_reads = true;
-    options.use_direct_io_for_flush_and_compaction = true;
-    // options.writable_file_max_buffer_size = 4096;
+    options->use_direct_reads = true;
+    options->use_direct_io_for_flush_and_compaction = true;
+    // options->writable_file_max_buffer_size = 4096;
 
     // block size is 4096 by default, configurable using BlockBasedTableOptions
-
-    return options;
 }
 
 LSMTree::LSMTree(std::string &name) {
-    options = getOptions(memtable_size, cache_size, multiplier);
+    Options options;
+    setOptions(memtable_size, cache_size, multiplier, &options);
     Status s = DB::Open(options, name, &db);
     if (!s.ok()) {
         fprintf(stderr, "Can't open database: %s\n", s.ToString().c_str());
         std::abort();
     }
+}
+
+LSMTree::~LSMTree() {
+    delete db;
 }
 
 Status LSMTree::Insert(const Slice& key, const Slice& value) {
@@ -74,13 +82,14 @@ Status LSMTree::Insert(const Slice& key, const Slice& value) {
     return s;
 }
 
-Status LSMTree::Get(const Slice& key, std::string *stringVal) {
+Status LSMTree::Get(const Slice& key, std::string *stringVal) {    
     s = db->Get(ReadOptions(), key, stringVal);
-    assert(s.ok());
 
-    Slice value(*stringVal);    
-    s = db->Put(WriteOptions(), key, value);
-    assert(s.ok());
+    if (s.ok()) {
+        Slice value(splayed_val);    
+        s = db->Put(WriteOptions(), key, value);
+        assert(s.ok());
+    } 
 
     return s;
 }

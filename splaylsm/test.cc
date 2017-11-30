@@ -37,7 +37,6 @@ void experiment1(
 
     for (int j = 0; j < num_repeats; j++) {
         // create DB
-        system("rm -rf /tmp/splay_test");
         LSMTree* db = new LSMTree(kDBPath);
         assert(db != NULL);
 
@@ -107,6 +106,7 @@ void experiment1(
         printf("Runtime: %f seconds\n",((float)t)/CLOCKS_PER_SEC);
 
         // close db
+        system("rm -rf /tmp/splay_test");
         delete db;
     }
 
@@ -122,8 +122,8 @@ int main() {
     using namespace splay_test_exp;
 
     // standard workload variables
-    int num_keys = 10000;             // 1 million
-    int num_ops = 100000;             // 10 million
+    int num_keys = 1000000;             // 1 million
+    int num_ops = 10000000;             // 10 million
     int test_repeats = 3;
 
     for (int write_pct = 0; write_pct <= 30; write_pct += 5) {

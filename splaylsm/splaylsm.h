@@ -22,6 +22,7 @@ class LSMTree {
 
     public:
         LSMTree (std::string &name);
+        ~LSMTree ();
         Status Insert(const Slice& key, const Slice& value);
         Status Get(const Slice& key, std::string *value);
 };
