@@ -28,16 +28,23 @@ void experiment1(
     int query_pct,
     int range_pct,
     int prob_write,
-    int num_repeats
+    int num_repeats,
+    bool splay_enabled
     ) {
     Status s;
 
     // keep track of total time for average
     float total_time = 0.0;
 
+    if (splay_enabled) {
+        printf("Splaying is enabled\n");        
+    } else {
+        printf("Splaying is disabled\n");
+    }
+
     for (int j = 0; j < num_repeats; j++) {
         // create DB
-        LSMTree* db = new LSMTree(kDBPath, true);
+        LSMTree* db = new LSMTree(kDBPath, splay_enabled);
         assert(db != NULL);
 
         // insert initial data
@@ -143,7 +150,18 @@ int main() {
                 query_pct,
                 range_pct,
                 write_pct,
-                test_repeats
+                test_repeats,
+                true
+            );
+
+            experiment1(
+                num_keys,
+                num_ops,
+                query_pct,
+                range_pct,
+                write_pct,
+                test_repeats,
+                false
             );
         }
     }
