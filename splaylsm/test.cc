@@ -37,7 +37,7 @@ void experiment1(
 
     for (int j = 0; j < num_repeats; j++) {
         // create DB
-        LSMTree* db = new LSMTree(kDBPath);
+        LSMTree* db = new LSMTree(kDBPath, true);
         assert(db != NULL);
 
         // insert initial data

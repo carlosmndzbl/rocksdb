@@ -61,7 +61,8 @@ void setOptions(
     // block size is 4096 by default, configurable using BlockBasedTableOptions
 }
 
-LSMTree::LSMTree(std::string &name) {
+LSMTree::LSMTree(std::string &name, bool isSplay) {
+    is_splay_ = isSplay;
     Options options;
     setOptions(memtable_size, cache_size, multiplier, &options);
     Status s = DB::Open(options, name, &db);
@@ -85,7 +86,7 @@ Status LSMTree::Insert(const Slice& key, const Slice& value) {
 Status LSMTree::Get(const Slice& key, std::string *stringVal) {    
     s = db->Get(ReadOptions(), key, stringVal);
 
-    if (s.ok()) {
+    if (s.ok() && is_splay_) {
         Slice value(splayed_val);    
         s = db->Put(WriteOptions(), key, value);
         assert(s.ok());

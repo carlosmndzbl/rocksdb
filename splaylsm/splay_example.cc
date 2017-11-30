@@ -13,7 +13,7 @@ std::string kDBPath = "/tmp/splay_simple_example";
 int main() {
     Status s;
 
-    LSMTree* db = new LSMTree(kDBPath);
+    LSMTree* db = new LSMTree(kDBPath, true);
     assert(db != NULL);
 
     // Put key-value
