@@ -106,8 +106,8 @@ void experiment1(
         printf("Runtime: %f seconds\n",((float)t)/CLOCKS_PER_SEC);
 
         // close db
-        system("rm -rf /tmp/splay_test");
         delete db;
+        system("rm -rf /tmp/splay_test");
     }
 
     printf("Average runtime: %f seconds\n", (total_time/num_repeats)/CLOCKS_PER_SEC);
