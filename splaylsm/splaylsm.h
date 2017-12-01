@@ -4,6 +4,7 @@
 #include <string>
 
 #include "rocksdb/db.h"
+#include "rocksdb/filter_policy.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/table.h"
 #include "rocksdb/options.h"
@@ -16,9 +17,9 @@ class LSMTree {
     Options options;
     Status s;
 
-    const int memtable_size = 262144; // 256 KB
-    const int cache_size = 262144; // 256 KB
-    const int multiplier = 10;
+    int memtable_size = 131072; // 128 KB
+    int cache_size = 131072; // 128 KB
+    const int multiplier = 2;
 
     bool is_splay_;
 

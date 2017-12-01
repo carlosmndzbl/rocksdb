@@ -40,8 +40,6 @@ void setOptions(
     options->max_background_compactions = 1;
     options->max_background_flushes = 1;
 
-    // bloom filter options as defaults
-
     // block cache options (it's empty)
     BlockBasedTableOptions table_options;
     if (cache_size) {
@@ -49,9 +47,14 @@ void setOptions(
     } else {
     table_options.no_block_cache = true;
     }
+    // bloom filter per file
+    table_options.filter_policy.reset(
+        NewBloomFilterPolicy(10, false)
+    );
     ColumnFamilyOptions column_family_options;
     column_family_options.table_factory.reset(
-        NewBlockBasedTableFactory(table_options));
+        NewBlockBasedTableFactory(table_options)
+    );
 
     // os cache options (do not use OS cache for IO)
     options->use_direct_reads = true;
@@ -64,6 +67,12 @@ void setOptions(
 LSMTree::LSMTree(std::string &name, bool isSplay) {
     is_splay_ = isSplay;
     Options options;
+    if (isSplay) {
+        // no cache & bigger memtable
+        // (TODO: make this nicer, no need to have these as instance vars)
+        cache_size = 0;
+        memtable_size *= 2;
+    }
     setOptions(memtable_size, cache_size, multiplier, &options);
     Status s = DB::Open(options, name, &db);
     if (!s.ok()) {
