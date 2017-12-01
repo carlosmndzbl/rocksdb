@@ -131,7 +131,7 @@ int main() {
     // standard workload variables
     int num_keys = 1000000;             // 1 million
     int num_ops = 1000000;              // 1 million
-    int test_repeats = 5
+    int test_repeats = 5;
 
     for (int write_pct = 0; write_pct <= 30; write_pct += 5) {
         for (int range_pct = 2; range_pct <= 30; range_pct += 2) {
