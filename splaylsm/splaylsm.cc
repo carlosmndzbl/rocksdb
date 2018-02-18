@@ -25,14 +25,14 @@ void setOptions(
     options->min_write_buffer_number_to_merge = 1;
 
     // level 0 options: set the size of Level 0 to @multiplier times memtable size
-    options->level0_file_num_compaction_trigger = multiplier;	      
+    options->level0_file_num_compaction_trigger = multiplier;
     options->level0_slowdown_writes_trigger = multiplier;
     options->level0_stop_writes_trigger = multiplier;
     options->target_file_size_base = memtable_size;
 
     // other level options: L1 is same size as L0 per RocksDB recommendation
     options->max_bytes_for_level_base = multiplier * memtable_size;
-    options->max_bytes_for_level_multiplier = multiplier;  
+    options->max_bytes_for_level_multiplier = multiplier;
 
     // options->num_levels is 7 by default
 
@@ -86,21 +86,20 @@ LSMTree::~LSMTree() {
 }
 
 Status LSMTree::Insert(const Slice& key, const Slice& value) {
-    s = db->Put(WriteOptions(), key, value);
+    Status s = db->Put(WriteOptions(), key, value);
     assert(s.ok());
 
     return s;
 }
 
-Status LSMTree::Get(const Slice& key, std::string *stringVal) {    
-    s = db->Get(ReadOptions(), key, stringVal);
+Status LSMTree::Get(const Slice& key, std::string *stringVal) {
+    Status s = db->Get(ReadOptions(), key, stringVal);
 
     if (s.ok() && is_splay_) {
-        Slice value(splayed_val);    
+        Slice value(splayed_val);
         s = db->Put(WriteOptions(), key, value);
         assert(s.ok());
-    } 
+    }
 
     return s;
 }
-
