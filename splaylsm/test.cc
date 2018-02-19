@@ -3,11 +3,11 @@
 // LICENSE file in the root directory of this source tree. An additional grant
 // of patent rights can be found in the PATENTS file in the same directory.
 #include <cstdio>
-#include <iostream>
 #include <algorithm>
 #include <string>
 #include <vector>
 #include <random>
+#include <iostream>
 
 #include <time.h>
 
@@ -15,7 +15,7 @@
 #include "rocksdb/slice.h"
 #include "rocksdb/table.h"
 
-// #define SEED ((std::random_device()())
+// #define SEED ((std::random_device()()))
 #define SEED 0
 
 namespace splay_test_exp {
@@ -30,8 +30,8 @@ namespace splay_test_exp {
     void pareto_ops(std::vector<Op>& vec, int num_ops, int num_keys,
                     double pareto, double p_write) {
         assert(pareto >= 0 && pareto <= 1.0);
+        assert(p_write >= 0 && pareto <= 1.0);
         int boundary = std::round(num_keys * pareto);
-        std::cout << "boundary: " << boundary << std::endl;
         assert(boundary > 0 && boundary < num_keys);
         std::mt19937 gen(SEED);
         std::uniform_int_distribution<int> range_a(0, boundary - 1);
@@ -101,14 +101,12 @@ namespace splay_test_exp {
             for (int i = 0; i < num_ops; ++i) {
                 Slice key((char*)&ops[i].val, sizeof(ops[i].val));
                 if (ops[i].is_write) {
-                    if (ops[i].val != 0) std::cout << "inserting " << ops[i].val << std::endl;
                     if (!db.Insert(key, key).ok()) {
                         std::cerr << "Error on insert" << std::endl;
                         std::abort();
                     }
                 } else {
                     std::string res;
-                    if (ops[i].val != 0) std::cout << "getting " << ops[i].val << std::endl;
                     Status s = db.Get(key, &res);
                     if (!s.ok()) {
                         std::cerr << "Error on get " << s.ToString()
@@ -145,7 +143,7 @@ int main() {
     using namespace splay_test_exp;
 
     // standard workload variables
-    int num_keys = 50;             // 1 million
+    int num_keys = 1000000;             // 1 million
     int num_ops = 1000000;              // 1 million
     int test_repeats = 5;
 

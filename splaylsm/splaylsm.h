@@ -14,18 +14,21 @@ using namespace rocksdb;
 
 class LSMTree {
     DB* db;
-    Options options;
-    Status s;
+    static const int multiplier = 2;
 
-    int memtable_size = 131072; // 128 KB
-    int cache_size = 131072; // 128 KB
-    const int multiplier = 2;
-
-    bool is_splay_;
+    const int cache_size_;
+    const int memtable_size_;
+    const bool is_splay_;
 
     public:
         LSMTree (std::string &name, bool isSplay);
         ~LSMTree ();
         Status Insert(const Slice& key, const Slice& value);
         Status Get(const Slice& key, std::string *value);
+};
+
+// used as a prefix for values in a splaying LSMTree
+struct SplayTag {
+    uint8_t splayed : 1;
+    uint8_t merged : 1;
 };
