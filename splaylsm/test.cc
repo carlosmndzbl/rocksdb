@@ -46,6 +46,28 @@ namespace splay_test_exp {
         }
     }
 
+    void do_ops(LSMTree& db,
+                std::vector<Op>::const_iterator start,
+                std::vector<Op>::const_iterator end) {
+        for (auto it = start; it != end; ++it) {
+            Slice key((char*)&it->val, sizeof(it->val));
+            if (it->is_write) {
+                if (!db.Insert(key, key).ok()) {
+                    std::cerr << "Error on insert" << std::endl;
+                    std::abort();
+                }
+            } else {
+                std::string res;
+                Status s = db.Get(key, &res);
+                if (!s.ok()) {
+                    std::cerr << "Error on get " << s.ToString()
+                              << it->val << std::endl;
+                    std::abort();
+                }
+            }
+        }
+    }
+
 
     void setup(LSMTree& db, size_t num_keys) {
         // insert initial data
@@ -70,6 +92,7 @@ namespace splay_test_exp {
      * Tests workload where 1-@pareto of queries go to @pareto of keys
      */
     void experiment1(int num_keys,
+                     int warmup_ops,
                      int num_ops,
                      double pareto,
                      double p_write,
@@ -91,30 +114,16 @@ namespace splay_test_exp {
             setup(db, num_keys);
 
             std::vector<Op> ops;
-            pareto_ops(ops, num_ops, num_keys, pareto, p_write);
+            pareto_ops(ops, warmup_ops + num_ops, num_keys, pareto, p_write);
 
+            // warmup
+            do_ops(db, ops.cbegin(), ops.cbegin() + warmup_ops);
 
             clock_t t;
             t = clock();
 
             // inserts/gets
-            for (int i = 0; i < num_ops; ++i) {
-                Slice key((char*)&ops[i].val, sizeof(ops[i].val));
-                if (ops[i].is_write) {
-                    if (!db.Insert(key, key).ok()) {
-                        std::cerr << "Error on insert" << std::endl;
-                        std::abort();
-                    }
-                } else {
-                    std::string res;
-                    Status s = db.Get(key, &res);
-                    if (!s.ok()) {
-                        std::cerr << "Error on get " << s.ToString()
-                                  << ops[i].val << std::endl;
-                        std::abort();
-                    }
-                }
-            }
+            do_ops(db, ops.cbegin() + warmup_ops, ops.cend());
 
             // total clock ticks
             t = clock() - t;
@@ -144,8 +153,9 @@ int main() {
 
     // standard workload variables
     int num_keys = 1000000;             // 1 million
-    int num_ops = 1000000;              // 1 million
-    int test_repeats = 5;
+    int warmup_ops = 1000000;
+    int num_ops = 10000000;              // 1 million
+    int test_repeats = 1;
 
     for (double p_write = 0; p_write <= .3; p_write += .5) {
         for (double pareto = .02; pareto <= .3; pareto += .02) {
@@ -157,6 +167,7 @@ int main() {
 
             experiment1(
                 num_keys,
+                warmup_ops,
                 num_ops,
                 pareto,
                 p_write,
@@ -166,6 +177,7 @@ int main() {
 
             experiment1(
                 num_keys,
+                warmup_ops,
                 num_ops,
                 pareto,
                 p_write,
