@@ -8,8 +8,8 @@
 #include <vector>
 #include <random>
 #include <iostream>
-
 #include <time.h>
+#include <chrono>
 
 #include "../splaylsm/splaylsm.cc"
 #include "rocksdb/slice.h"
@@ -42,6 +42,20 @@ namespace splay_test_exp {
             bool is_write = unif(gen) < p_write;
             int val = unif(gen) < pareto ? range_b(gen) : range_a(gen);
             assert(val >= 0 && val < num_keys);
+            vec.emplace_back(Op(is_write, val));
+        }
+    }
+
+    void range_ops(std::vector<Op>& vec, int num_ops,
+                   int start, int end, double p_write) {
+        assert(p_write >= 0 && p_write <= 1.0);
+        assert(end > start);
+        std::mt19937 gen(SEED);
+        std::uniform_int_distribution<int> range(start, end - 1);
+        std::uniform_real_distribution<double> unif(0.0, 1.0);
+        for (int i = 0; i < num_ops; ++i) {
+            bool is_write = unif(gen) < p_write;
+            int val = range(gen);
             vec.emplace_back(Op(is_write, val));
         }
     }
@@ -143,49 +157,88 @@ namespace splay_test_exp {
                   << std::endl
                   << "---------------------------------------------------------"
                   << std::endl;
-        return;
     }
 
+    void varying_workload_experiment() {
+        static int num_trials = 3;
+        static int num_keys = 1000000; // 1 mil
+        static int time_interval = 1000;
+        // ops, min_key, max_key
+        static int params[5][3] = {
+            {400000, 0,     100000},
+            {200000, 50000, 150000},
+            {200000, 10000, 200000},
+            {200000, 20000, 300000},
+            {200000, 30000, 400000}
+        };
+
+        auto run_trial = [&](bool splay) {
+            LSMTree db(kDBPath, splay);
+            setup(db, num_keys);
+            std::vector<Op> ops;
+            for (int* workload : params) {
+                range_ops(ops, workload[0], workload[1], workload[2], 0);
+            }
+            for (auto it = ops.cbegin();
+                 it + time_interval <= ops.cend();
+                 it += time_interval) {
+                auto t1 = std::chrono::high_resolution_clock::now();
+                do_ops(db, it, it + time_interval);
+                auto t2 = std::chrono::high_resolution_clock::now();
+                std::cout << (splay ? "splay" : "nosplay") << ","
+                          << (it - ops.cbegin()) << ","
+                          << std::chrono::duration<double>(t2 - t1).count()
+                          << std::endl;
+            }
+            system(("rm -rf " + kDBPath).c_str());
+        };
+
+        run_trial(true);
+        run_trial(false);
+    }
 }
+
 
 int main() {
     using namespace splay_test_exp;
 
-    // standard workload variables
-    int num_keys = 1000000;             // 1 million
-    int warmup_ops = 1000000;
-    int num_ops = 10000000;              // 1 million
-    int test_repeats = 1;
+    varying_workload_experiment();
 
-    for (double p_write = 0; p_write <= .3; p_write += .5) {
-        for (double pareto = .02; pareto <= .3; pareto += .02) {
-            // query_pct % of queries go to range_pct % of keys
+    // // standard workload variables
+    // int num_keys = 1000000;             // 1 million
+    // int warmup_ops = 1000000;
+    // int num_ops = 10000000;              // 1 million
+    // int test_repeats = 1;
 
-            std::cout << "Workload: " << (1-pareto) << " of queries go to "
-                      << pareto << " of keys. "
-                      << p_write << " of ops are writes." << std::endl;
+    // for (double p_write = 0; p_write <= .3; p_write += .5) {
+    //     for (double pareto = .02; pareto <= .3; pareto += .02) {
+    //         // query_pct % of queries go to range_pct % of keys
 
-            experiment1(
-                num_keys,
-                warmup_ops,
-                num_ops,
-                pareto,
-                p_write,
-                test_repeats,
-                true
-            );
+    //         std::cout << "Workload: " << (1-pareto) << " of queries go to "
+    //                   << pareto << " of keys. "
+    //                   << p_write << " of ops are writes." << std::endl;
 
-            experiment1(
-                num_keys,
-                warmup_ops,
-                num_ops,
-                pareto,
-                p_write,
-                test_repeats,
-                false
-            );
-        }
-    }
+    //         experiment1(
+    //             num_keys,
+    //             warmup_ops,
+    //             num_ops,
+    //             pareto,
+    //             p_write,
+    //             test_repeats,
+    //             true
+    //         );
 
-    return 0;
+    //         experiment1(
+    //             num_keys,
+    //             warmup_ops,
+    //             num_ops,
+    //             pareto,
+    //             p_write,
+    //             test_repeats,
+    //             false
+    //         );
+    //     }
+    // }
+
+    // return 0;
 }
