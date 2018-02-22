@@ -15,8 +15,8 @@
 #include "rocksdb/slice.h"
 #include "rocksdb/table.h"
 
-// #define SEED ((std::random_device()()))
-#define SEED 0
+#define SEED ((std::random_device()()))
+// #define SEED 0
 
 namespace splay_test_exp {
     static std::string kDBPath = "/tmp/splay_test";
@@ -162,7 +162,7 @@ namespace splay_test_exp {
     void varying_workload_experiment() {
         static int num_trials = 3;
         static int num_keys = 1000000; // 1 mil
-        static int time_interval = 1000;
+        static int time_interval = 10000;
         // ops, min_key, max_key
         static int params[5][3] = {
             {400000, 0,     100000},
