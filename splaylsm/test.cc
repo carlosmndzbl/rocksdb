@@ -93,8 +93,10 @@ namespace splay_test_exp {
             std::mt19937(SEED)
         );
         for (size_t i = 0; i < num_keys; i++) {
+            static char val_buf[128 - sizeof(int)];
             Slice key((char*)&initial_elements[i], sizeof(int));
-            if (!db.Insert(key, key).ok()) {
+            Slice val(val_buf, sizeof(val_buf));
+            if (!db.Insert(key, val).ok()) {
                 std::cerr << "Error on Insert in setup" << std::endl;
                 std::abort();
             }
@@ -165,11 +167,11 @@ namespace splay_test_exp {
         static int time_interval = 10000;
         // ops, min_key, max_key
         static int params[5][3] = {
-            {400000, 0,     100000},
-            {200000, 50000, 150000},
-            {200000, 10000, 200000},
-            {200000, 20000, 300000},
-            {200000, 30000, 400000}
+            {400000, 0,      100000},
+            {200000, 50000,  150000},
+            {200000, 100000, 200000},
+            {200000, 200000, 300000},
+            {200000, 300000, 400000}
         };
 
         auto run_trial = [&](bool splay) {
