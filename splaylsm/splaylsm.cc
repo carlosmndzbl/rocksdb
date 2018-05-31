@@ -3,6 +3,7 @@
 
 #include "../splaylsm/splaylsm.h"
 #include "../splaylsm/splay_filter.h"
+#include "../include/rocksdb/filter_policy.h"
 
 void setOptions(Options& options,
                 int memtable_size,
@@ -48,10 +49,9 @@ void setOptions(Options& options,
     } else {
     table_options.no_block_cache = true;
     }
-    // bloom filter per file
-    table_options.filter_policy.reset(
-        NewBloomFilterPolicy(10, false)
-    );
+    // no bloom filters
+    table_options.filter_policy.reset((FilterPolicy *) nullptr);
+
     ColumnFamilyOptions column_family_options;
     column_family_options.table_factory.reset(
         NewBlockBasedTableFactory(table_options)
