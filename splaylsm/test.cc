@@ -107,13 +107,14 @@ namespace splay_test_exp {
     /*
      * Tests workload where 1-@pareto of queries go to @pareto of keys
      */
-    void experiment1(int num_keys,
-                     int warmup_ops,
-                     int num_ops,
-                     double pareto,
-                     double p_write,
-                     int num_repeats,
-                     bool splay_enabled) {
+    void standard_experiment_trial(
+            int num_keys,
+            int warmup_ops,
+            int num_ops,
+            double pareto,
+            double p_write,
+            int num_repeats,
+            bool splay_enabled) {
 
         // keep track of total time for average
         float total_time = 0.0;
@@ -198,49 +199,49 @@ namespace splay_test_exp {
         run_trial(true);
         run_trial(false);
     }
-}
 
+    void standard_experiment() {
+        // standard workload variables
+        int num_keys = 1000000;             // 1 million
+        int warmup_ops = 1000000;
+        int num_ops = 10000000;              // 1 million
+        int test_repeats = 5;
+
+        for (double p_write = 0; p_write <= .3; p_write += .5) {
+            for (double pareto = .02; pareto <= .3; pareto += .02) {
+                // query_pct % of queries go to range_pct % of keys
+
+                std::cout << "Workload: " << (1-pareto) << " of queries go to "
+                        << pareto << " of keys. "
+                        << p_write << " of ops are writes." << std::endl;
+
+                standard_experiment_trial(
+                    num_keys,
+                    warmup_ops,
+                    num_ops,
+                    pareto,
+                    p_write,
+                    test_repeats,
+                    true
+                );
+
+                standard_experiment_trial(
+                    num_keys,
+                    warmup_ops,
+                    num_ops,
+                    pareto,
+                    p_write,
+                    test_repeats,
+                    false
+                );
+            }
+        }
+    }
+}
 
 int main() {
     using namespace splay_test_exp;
 
-    varying_workload_experiment();
-
-    // // standard workload variables
-    // int num_keys = 1000000;             // 1 million
-    // int warmup_ops = 1000000;
-    // int num_ops = 10000000;              // 1 million
-    // int test_repeats = 1;
-
-    // for (double p_write = 0; p_write <= .3; p_write += .5) {
-    //     for (double pareto = .02; pareto <= .3; pareto += .02) {
-    //         // query_pct % of queries go to range_pct % of keys
-
-    //         std::cout << "Workload: " << (1-pareto) << " of queries go to "
-    //                   << pareto << " of keys. "
-    //                   << p_write << " of ops are writes." << std::endl;
-
-    //         experiment1(
-    //             num_keys,
-    //             warmup_ops,
-    //             num_ops,
-    //             pareto,
-    //             p_write,
-    //             test_repeats,
-    //             true
-    //         );
-
-    //         experiment1(
-    //             num_keys,
-    //             warmup_ops,
-    //             num_ops,
-    //             pareto,
-    //             p_write,
-    //             test_repeats,
-    //             false
-    //         );
-    //     }
-    // }
-
-    // return 0;
+    // varying_workload_experiment();
+    standard_experiment();
 }
