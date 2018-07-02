@@ -119,12 +119,6 @@ namespace splay_test_exp {
         // keep track of total time for average
         float total_time = 0.0;
 
-        if (splay_enabled) {
-            std::cout << "Splaying is enabled" << std::endl;
-        } else {
-            std::cout << "Splaying is disabled" << std::endl;
-        }
-
         for (int j = 0; j < num_repeats; j++) {
             // create DB
             LSMTree db = LSMTree(kDBPath, splay_enabled);
@@ -145,21 +139,24 @@ namespace splay_test_exp {
             // total clock ticks
             t = clock() - t;
             total_time += (float)t;
-            std::cout << "Runtime: "
-                      << ((float)t/CLOCKS_PER_SEC)
-                      << " seconds"
-                      << std::endl;
+
+            // see standard_experiment() for format
+            std::cout << "single,"
+                      << (splay_enabled ? "splay-enabled," : "splay-disabled,")
+                      << p_write << ","
+                      << pareto << ","
+                      << (float)t/CLOCKS_PER_SEC << std::endl;
 
             // close db
             system("rm -rf /tmp/splay_test");
         }
 
-        std::cout << "Average runtime: "
-                  << (total_time/num_repeats/CLOCKS_PER_SEC)
-                  << " seconds"
-                  << std::endl
-                  << "---------------------------------------------------------"
-                  << std::endl;
+        // also print average
+        std::cout << "avg,"
+                  << (splay_enabled ? "splay-enabled," : "splay-disabled,")
+                  << p_write << ","
+                  << pareto << ","
+                  << total_time/num_repeats/CLOCKS_PER_SEC << std::endl;
     }
 
     void varying_workload_experiment() {
@@ -202,18 +199,16 @@ namespace splay_test_exp {
 
     void standard_experiment() {
         // standard workload variables
-        int num_keys = 1000000;             // 1 million
-        int warmup_ops = 1000000;
-        int num_ops = 10000000;              // 1 million
-        int test_repeats = 5;
+        int num_keys = 100000;             // 100k
+        int warmup_ops = 100000;
+        int num_ops = 100000;              // 100k
+        int test_repeats = 30;
+
+        // format: single/avg,splay-enabled/splay-disabled,p_write,pareto,seconds
 
         for (double p_write = 0; p_write <= .3; p_write += .5) {
-            for (double pareto = .02; pareto <= .3; pareto += .02) {
+            for (double pareto = .02; pareto <= .4; pareto += .02) {
                 // query_pct % of queries go to range_pct % of keys
-
-                std::cout << "Workload: " << (1-pareto) << " of queries go to "
-                        << pareto << " of keys. "
-                        << p_write << " of ops are writes." << std::endl;
 
                 standard_experiment_trial(
                     num_keys,

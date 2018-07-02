@@ -67,8 +67,8 @@ void setOptions(Options& options,
 
 LSMTree::LSMTree(std::string &name, bool is_splay) :
     is_splay_(is_splay),
-    cache_size_(is_splay ? 0 : 131072), // 128 KB
-    memtable_size_(is_splay ? (2 * 131072) : 131072) {
+    cache_size_(is_splay ? 0 : 16384), // 16KB
+    memtable_size_(is_splay ? (2 * 16384) : 16384) {
     Options options;
     setOptions(options, memtable_size_, cache_size_, multiplier, is_splay);
     Status s = DB::Open(options, name, &db);

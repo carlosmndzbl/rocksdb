@@ -34,10 +34,7 @@ public:
         // return true to remove, false to keep
         const SplayTag* prev_tag =
             reinterpret_cast<const SplayTag*>(existing_value.data());
-        if (prev_tag->splayed) {
-            // always delete splayed items
-            return true;
-        }
+
         if (!prev_tag->merged) {
             // update merged tag
             *new_value =
